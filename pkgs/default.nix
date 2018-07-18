@@ -15731,6 +15731,7 @@ license = stdenv.lib.licenses.mit;
 , safe-exceptions
 , safecopy
 , serokell-util
+, servant
 , stdenv
 , stm
 , template-haskell
@@ -15799,6 +15800,7 @@ resourcet
 safe-exceptions
 safecopy
 serokell-util
+servant
 stm
 template-haskell
 text
