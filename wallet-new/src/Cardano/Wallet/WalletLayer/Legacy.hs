@@ -16,7 +16,7 @@ import           Data.Coerce (coerce)
 import           Cardano.Wallet.WalletLayer.Error (WalletLayerError (..))
 import           Cardano.Wallet.WalletLayer.Types (ActiveWalletLayer (..),
                      CreateAddressError (..), CreateWalletError,
-                     PassiveWalletLayer (..))
+                     CreateAccountError (..), PassiveWalletLayer (..))
 
 import           Cardano.Wallet.API.V1.Migration (migrate)
 import           Cardano.Wallet.API.V1.Migration.Types ()
@@ -214,7 +214,7 @@ pwlCreateAccount
     :: forall ctx m. (MonadLegacyWallet ctx m)
     => WalletId
     -> NewAccount
-    -> m Account
+    -> m (Either CreateAccountError Account)
 pwlCreateAccount wId newAcc@NewAccount{..} = do
 
     let spendingPassword = fromMaybe mempty . fmap coerce $ naccSpendingPassword
@@ -222,7 +222,7 @@ pwlCreateAccount wId newAcc@NewAccount{..} = do
     accInit     <- migrate (wId, newAcc)
     cAccount    <- V0.newAccount RandomSeed spendingPassword accInit
 
-    migrate cAccount
+    Right <$> migrate cAccount
 
 pwlGetAccounts
     :: forall ctx m. (MonadLegacyWallet ctx m)
