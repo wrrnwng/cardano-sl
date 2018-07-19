@@ -1,6 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ImplicitParams             #-}
 {-# LANGUAGE InstanceSigs               #-}
+{-# LANGUAGE UndecidableInstances       #-}
 
 -- | Interpreter from the DSL to Cardano types
 module UTxO.Interpreter (
@@ -30,9 +31,10 @@ import qualified Data.List.NonEmpty as NE
 import qualified Data.Map.Strict as Map
 import           Data.Reflection (give)
 import qualified Data.Set as Set
-import           Formatting (bprint, shown)
+import           Formatting (bprint, build, shown, (%))
 import qualified Formatting.Buildable
 import           Prelude (Show (..))
+import           Serokell.Util (mapJson)
 
 import           Cardano.Wallet.Kernel.DB.Resolved
 import           Cardano.Wallet.Kernel.Types
@@ -68,6 +70,19 @@ data IntException =
   | IntExMkSlot         Text
   | IntExTx             TxError -- ^ Occurs during fee calculation
   | IntUnknownHash      Text
+
+    -- | Unknown stake holder during stake calculation
+  | IntUnknownStakeholder StakeholderId
+
+    -- | Coin overflow during stake calculation
+    --
+    -- We record the old stake and the stake we were suppose to add
+  | IntStakeOverflow StakeholderId Coin Coin
+
+    -- | Coin underflow during stake calculatino
+    --
+    -- We record the old stake and the stake we were supposed to subtract
+  | IntStakeUnderflow StakeholderId Coin Coin
   deriving (Show)
 
 instance Exception IntException
@@ -122,21 +137,21 @@ data IntCtxt h = IntCtxt {
 --
 -- NOTE: In Cardano there is no equivalent of the boot transaction and hence
 -- no hash of the boot transaction.
-initIntCtxt :: Monad m => DSL.Transaction h Addr -> TranslateT IntException m (IntCtxt h)
+initIntCtxt :: Monad m => DSL.Transaction h Addr -> TranslateT e m (IntCtxt h)
 initIntCtxt boot = do
-    firstSlot <- mapTranslateErrors IntExMkSlot $ translateFirstSlot
-    genesis   <- BlockHeaderGenesis <$> translateGenesisHeader
-    leaders   <- asks (ccInitLeaders . tcCardano)
-    initStakes <- asks (ccStakes . tcCardano)
+    firstSlot  <- translateFirstSlot
+    genesis    <- BlockHeaderGenesis <$> translateGenesisHeader
+    leaders    <- asks (ccInitLeaders . tcCardano)
+    initStakes <- asks (ccStakes      . tcCardano)
     return $ IntCtxt {
-          icLedger       = DSL.ledgerSingleton boot
-        , icHashes       = Map.empty
-        , icNextSlot     = firstSlot
-        , icPrevBlock    = genesis
-        , icEpochLeaders = leaders
-        , icStakes       = initStakes
+          icLedger        = DSL.ledgerSingleton boot
+        , icHashes        = Map.empty
+        , icNextSlot      = firstSlot
+        , icPrevBlock     = genesis
+        , icEpochLeaders  = leaders
+        , icStakes        = initStakes
         , icCrucialStakes = initStakes
-        , icEpoch        = EpochIndex 0
+        , icEpoch         = EpochIndex 0
         }
 
 {-------------------------------------------------------------------------------
@@ -213,37 +228,63 @@ liftTranslateInt ta =  IntT $ lift $ mapTranslateErrors Left $ withConfig $ ta
 pushTx :: forall h e m. (DSL.Hash h Addr, Monad m)
        => (DSL.Transaction h Addr, TxId) -> IntT h e m ()
 pushTx (t, id) = do
-    gs <- asks (gdBootStakeholders . ccData . tcCardano)
-    ledger <- gets icLedger
-    inputSpentOutputs <- mapM int $ catMaybes $ flip DSL.inpSpentOutput ledger <$> Set.toList (DSL.trIns t)
+    gs      <- asks (gdBootStakeholders . ccData . tcCardano)
+    ledger  <- gets icLedger
+    inputs  <- mapM (int . flip DSL.inpSpentOutput' ledger) $ Set.toList (DSL.trIns t)
     outputs <- mapM int $ DSL.trOuts t
-    modify $ aux (txModifyStakes gs inputSpentOutputs outputs)
+    ic      <- get
+    newStakes <- txModifyStakes gs inputs outputs (icStakes ic)
+    put (aux newStakes ic)
   where
-    aux :: (StakesMap -> StakesMap) -> IntCtxt h -> IntCtxt h
-    aux smu ic =
-        IntCtxt
-        { icLedger       = DSL.ledgerAdd t            (icLedger ic)
-        , icHashes       = Map.insert (DSL.hash t) id (icHashes ic)
-        , icNextSlot     = icNextSlot     ic
-        , icPrevBlock    = icPrevBlock    ic
-        , icEpochLeaders = icEpochLeaders ic
-        , icStakes       = newStakes
+    aux :: StakesMap -> IntCtxt h -> IntCtxt h
+    aux newStakes ic = IntCtxt {
+          icLedger        = DSL.ledgerAdd t            (icLedger ic)
+        , icHashes        = Map.insert (DSL.hash t) id (icHashes ic)
+        , icNextSlot      = icNextSlot     ic
+        , icPrevBlock     = icPrevBlock    ic
+        , icEpochLeaders  = icEpochLeaders ic
+        , icEpoch         = icEpoch        ic
+        , icStakes        = newStakes
         , icCrucialStakes = newStakes
-        , icEpoch = icEpoch ic
         }
-      where
-        newStakes = smu $ icStakes ic
 
-    -- Update the stakes map as a result of this transaction.
-    --
-    -- We follow the 'Stakes modification' section of the txp.md document.
-    txModifyStakes :: GenesisWStakeholders -> [TxOutAux] -> [TxOutAux] -> StakesMap -> StakesMap
-    txModifyStakes gs inputSpentOutputs outputs = let
-        inputStakes  = (txOutStake gs . toaOut) =<< inputSpentOutputs
-        outputStakes = (txOutStake gs . toaOut) =<< outputs
-        plusStake  sm' = foldl' (flip . uncurry $ HM.insertWith (flip unsafeAddCoin)) sm' outputStakes
-        minusStake sm' = foldl' (flip . uncurry $ HM.insertWith (flip unsafeSubCoin)) sm' inputStakes
-      in (plusStake . minusStake)
+-- Update the stakes map as a result of a transaction.
+--
+-- We follow the 'Stakes modification' section of the txp.md document.
+txModifyStakes :: forall h e m. Monad m
+               => GenesisWStakeholders
+               -> [TxOutAux]
+               -> [TxOutAux]
+               -> StakesMap
+               -> IntT h e m StakesMap
+txModifyStakes gs inputSpentOutputs outputs =
+    subStake >=> addStake
+  where
+    inputStakes, outputStakes :: [(StakeholderId, Coin)]
+    inputStakes  = concatMap (txOutStake gs . toaOut) inputSpentOutputs
+    outputStakes = concatMap (txOutStake gs . toaOut) outputs
+
+    addStake, subStake :: StakesMap -> IntT h e m StakesMap
+    addStake sm = foldM (flip addStake1) sm outputStakes
+    subStake sm = foldM (flip subStake1) sm inputStakes
+
+    addStake1, subStake1 :: (StakeholderId, Coin) -> StakesMap -> IntT h e m StakesMap
+    addStake1 (id, c) sm = do
+        stake <- stakeOf id sm
+        case stake `addCoin` c of
+          Just stake' -> return $! HM.insert id stake' sm
+          Nothing     -> throwError $ Left $ IntStakeOverflow id stake c
+    subStake1 (id, c) sm = do
+        stake <- stakeOf id sm
+        case stake `subCoin` c of
+          Just stake' -> return $! HM.insert id stake' sm
+          Nothing     -> throwError $ Left $ IntStakeUnderflow id stake c
+
+    stakeOf :: StakeholderId -> StakesMap -> IntT h e m Coin
+    stakeOf id sm =
+        case HM.lookup id sm of
+          Just s  -> return s
+          Nothing -> throwError $ Left $ IntUnknownStakeholder id
 
 -- | Add an epoch boundary into the context.
 --
@@ -540,3 +581,30 @@ instance DSL.Hash h Addr => Interpret h (DSL.Chain h Addr) where
 mustBeLeft :: Either a Void -> a
 mustBeLeft (Left  a) = a
 mustBeLeft (Right b) = absurd b
+
+{-------------------------------------------------------------------------------
+  Pretty-printing
+-------------------------------------------------------------------------------}
+
+-- | NOTE: This is only for debugging. We print only a small subset.
+instance DSL.Hash h Addr => Buildable (IntCtxt h) where
+  build IntCtxt{..} = bprint
+    ( "IntCtxt {"
+--    % "  ledger:        " % build
+--    % ", hashes:        " % mapJson
+    % ", epoch:         " % build
+    % ", nextSlot:      " % build
+--    % ", prevBlock:     " % build
+--    % ", epochLeaders:  " % listJson
+    % ", stakes:        " % mapJson
+--    % ", crucialStakes: " % mapJson
+    % "}"
+    )
+--    icLedger
+--    icHashes
+    icEpoch
+    icNextSlot
+--    icPrevBlock
+--    icEpochLeaders
+    icStakes
+--    icCrucialStakes

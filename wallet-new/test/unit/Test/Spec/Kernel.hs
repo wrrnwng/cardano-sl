@@ -25,6 +25,7 @@ import           UTxO.Translate
 import           Wallet.Abstract
 import           Wallet.Inductive
 import           Wallet.Inductive.Cardano
+import           Wallet.Inductive.Validation
 
 import qualified Wallet.Rollback.Full as Full
 
@@ -40,10 +41,12 @@ spec =
           bracketActiveWallet $ \activeWallet -> do
             checkEquivalent activeWallet (dependentPending genesis)
       it "computes identical results using generated inductive wallets" $
-        forAllShrink (genInductiveUsingModel model)
-                     ((:[]) . inductiveInit) $ \ind -> do
-          bracketActiveWallet $ \activeWallet -> do
-            checkEquivalent activeWallet ind
+        forAll (genInductiveUsingModel model) $ \ind -> do
+          conjoin [
+              shouldBeValidated $ void (inductiveIsValid ind)
+            , bracketActiveWallet $ \activeWallet -> do
+                checkEquivalent activeWallet ind
+            ]
   where
     transCtxt = runTranslateNoErrors ask
     boot      = bootstrapTransaction transCtxt
@@ -64,7 +67,7 @@ spec =
                     -> Inductive h Addr
                     -> Expectation
     checkEquivalent activeWallet ind = do
-       shouldReturnValidated $ runTranslateT $ do
+       shouldReturnValidated $ runTranslateTNoErrors $ do
          equivalentT activeWallet (encKpEnc ekp) (mkWallet (== addr)) ind
       where
         [addr]       = Set.toList $ inductiveOurs ind

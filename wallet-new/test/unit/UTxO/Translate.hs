@@ -4,6 +4,7 @@ module UTxO.Translate (
     TranslateT
   , Translate
   , runTranslateT
+  , runTranslateTNoErrors
   , runTranslate
   , runTranslateNoErrors
   , withConfig
@@ -112,6 +113,10 @@ runTranslateT (TranslateT ta) =
               Left  e -> throw  e
               Right a -> return a
 
+-- | Specialised form of 'runTranslateT' when there can be no errors
+runTranslateTNoErrors :: Monad m => TranslateT Void m a -> m a
+runTranslateTNoErrors = runTranslateT
+
 -- | Specialization of 'runTranslateT'
 runTranslate :: Exception e => Translate e a -> a
 runTranslate = runIdentity . runTranslateT
@@ -160,9 +165,11 @@ catchSomeTranslateErrors act = do
 -------------------------------------------------------------------------------}
 
 -- | Slot ID of the first block
-translateFirstSlot :: Monad m => TranslateT Text m SlotId
-translateFirstSlot = withConfig $ do
+translateFirstSlot :: Monad m => TranslateT e m SlotId
+translateFirstSlot = mapTranslateErrors firstSlotCannotFail $ withConfig $ do
     SlotId 0 <$> mkLocalSlotIndex 0
+  where
+    firstSlotCannotFail = error "translateFirstSlot: cannot fail"
 
 -- | Increment slot ID
 --
