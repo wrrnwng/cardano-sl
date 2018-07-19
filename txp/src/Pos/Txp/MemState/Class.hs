@@ -38,6 +38,7 @@ import           Pos.Txp.Configuration (HasTxpConfiguration)
 import           Pos.Txp.MemState.Types (GenericTxpLocalData (..))
 import           Pos.Txp.Toil.Failure (ToilVerFailure)
 import           Pos.Txp.Toil.Types (MemPool (..), UndoMap, UtxoModifier)
+import           Pos.Util.Trace.Named (TraceNamed)
 import           Pos.Util.Util (HasLens (..))
 
 data TxpHolderTag
@@ -119,8 +120,8 @@ clearTxpMemPool txpData = do
 type family MempoolExt (m :: * -> *) :: *
 
 class Monad m => MonadTxpLocal m where
-    txpNormalize :: ProtocolMagic -> m ()
-    txpProcessTx :: ProtocolMagic -> (TxId, TxAux) -> m (Either ToilVerFailure ())
+    txpNormalize :: TraceNamed m -> ProtocolMagic -> m ()
+    txpProcessTx :: TraceNamed m -> ProtocolMagic -> (TxId, TxAux) -> m (Either ToilVerFailure ())
 
 type TxpLocalWorkMode ctx m =
     ( MonadIO m

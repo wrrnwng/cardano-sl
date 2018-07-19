@@ -184,8 +184,8 @@ txNormalize
        ( TxpLocalWorkMode ctx m
        , MempoolExt m ~ ()
        )
-    => ProtocolMagic -> m ()
-txNormalize =
+    => TraceNamed m -> ProtocolMagic -> m ()
+txNormalize _ =
     txNormalizeAbstract buildContext . normalizeToilHoisted
   where
     buildContext :: Utxo -> [TxAux] -> m ()

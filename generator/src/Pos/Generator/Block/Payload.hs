@@ -42,6 +42,7 @@ import           Pos.Txp.MemState.Class (MonadTxpLocal (..))
 import           Pos.Txp.Toil (Utxo, execUtxoM, utxoToLookup)
 import qualified Pos.Txp.Toil.Utxo as Utxo
 import qualified Pos.Util.Modifier as Modifier
+import           Pos.Util.Trace (noTrace)
 
 ----------------------------------------------------------------------------
 -- Tx payload generation
@@ -222,7 +223,7 @@ genTxPayload pm = do
         let txId = hash tx
         let txIns = _txInputs tx
         -- @txpProcessTx@ for BlockGenMode should be non-blocking
-        res <- lift . lift $ txpProcessTx pm (txId, txAux)
+        res <- lift . lift $ txpProcessTx noTrace pm (txId, txAux)
         case res of
             Left e  -> error $ "genTransaction@txProcessTransaction: got left: " <> pretty e
             Right _ -> do

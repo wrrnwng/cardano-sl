@@ -32,7 +32,9 @@ import           Pos.Ssc.Configuration (HasSscConfiguration)
 import           Pos.Txp (HasTxpConfiguration, MempoolExt, MonadTxpLocal (..))
 import           Pos.Update.Configuration (HasUpdateConfiguration)
 import           Pos.Util.CompileInfo (HasCompileInfo)
+import qualified Pos.Util.Log as Log
 import           Pos.Util.Mockable ()
+import           Pos.Util.Trace (noTrace)
 import           Pos.WorkMode (RealMode, RealModeContext (..))
 
 import           Pos.Explorer.BListener (ExplorerBListener,
@@ -62,8 +64,8 @@ instance (HasConfiguration, HasTxpConfiguration) =>
 
 instance (HasConfiguration, HasTxpConfiguration) =>
          MonadTxpLocal ExplorerProd where
-    txpNormalize = lift . lift . txpNormalize
-    txpProcessTx pm = lift . lift . txpProcessTx pm
+    txpNormalize = {-lift . lift . -}txpNormalize
+    txpProcessTx logTrace pm = {-lift . lift . -}txpProcessTx logTrace pm
 
 -- | Use the 'RealMode' instance.
 -- FIXME instance on a type synonym.
@@ -90,33 +92,36 @@ notifierPlugin
     => NotifierSettings
     -> Diffusion ExplorerProd
     -> ExplorerProd ()
-notifierPlugin settings _ = notifierApp settings
+notifierPlugin settings _ = notifierApp noTrace settings
 
 explorerPlugin
     :: HasExplorerConfiguration
-    => Word16
+    => Log.LoggingHandler
+    -> Word16
     -> Diffusion ExplorerProd
     -> ExplorerProd ()
-explorerPlugin = flip explorerServeWebReal
+explorerPlugin lh = flip $ explorerServeWebReal lh
 
 explorerServeWebReal
     :: HasExplorerConfiguration
-    => Diffusion ExplorerProd
+    => Log.LoggingHandler
+    -> Diffusion ExplorerProd
     -> Word16
     -> ExplorerProd ()
-explorerServeWebReal diffusion port = do
+explorerServeWebReal lh diffusion port = do
     rctx <- ask
-    let handlers = explorerHandlers diffusion
-        server = hoistServer explorerApi (convertHandler rctx) handlers
+    let handlers = explorerHandlers noTrace diffusion
+        server = hoistServer explorerApi (convertHandler lh rctx) handlers
         app = explorerApp (pure server)
     explorerServeImpl app port
 
 convertHandler
     :: HasConfiguration
-    => RealModeContext ExplorerExtraModifier
+    => Log.LoggingHandler
+    -> RealModeContext ExplorerExtraModifier
     -> ExplorerProd a
     -> Handler a
-convertHandler rctx handler =
+convertHandler lh rctx handler =
     let extraCtx = makeExtraCtx
         ioAction = realRunner $
                    runExplorerProd extraCtx
@@ -124,7 +129,7 @@ convertHandler rctx handler =
     in liftIO ioAction `E.catches` excHandlers
   where
     realRunner :: forall t . RealModeE t -> IO t
-    realRunner act = runProduction $ Mtl.runReaderT act rctx
+    realRunner act = Log.usingLoggerName lh "" $ runProduction $ Mtl.runReaderT act rctx
 
     excHandlers = [E.Handler catchServant]
     catchServant = throwError

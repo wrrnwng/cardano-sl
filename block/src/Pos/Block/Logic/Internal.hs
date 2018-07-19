@@ -136,7 +136,7 @@ normalizeMempool logTrace pm = do
     -- That's because delegation mempool normalization is harder and is done
     -- within block application.
     sscNormalize logTrace pm
-    txpNormalize pm
+    txpNormalize logTrace pm
     usNormalize logTrace
 
 -- | Applies a definitely valid prefix of blocks. This function is unsafe,

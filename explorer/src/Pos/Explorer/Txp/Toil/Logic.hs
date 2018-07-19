@@ -53,7 +53,7 @@ eApplyToil
     -> [(TxAux, TxUndo)]
     -> HeaderHash
     -> EGlobalToilM ()
-eApplyToil logTrace mTxTimestamp txun hh = do
+eApplyToil _ mTxTimestamp txun hh = do
     extendGlobalToilM $ Txp.applyToil txun
     explorerExtraMToEGlobalToilM $ mapM_ applier $ zip [0..] txun
   where
@@ -65,13 +65,13 @@ eApplyToil logTrace mTxTimestamp txun hh = do
         extra <- fromMaybe newExtra <$> getTxExtra id
         putTxExtraWithHistory id extra $ getTxRelatedAddrs txAux txUndo
         let balanceUpdate = getBalanceUpdate txAux txUndo
-        updateAddrBalances logTrace balanceUpdate
+        updateAddrBalances noTrace balanceUpdate
         updateUtxoSumFromBalanceUpdate balanceUpdate
 
 -- | Rollback transactions from one block.
 eRollbackToil
     :: HasConfiguration
-    => TraceNamed m
+    => TraceNamed ExplorerExtraM
     -> [(TxAux, TxUndo)]
     -> EGlobalToilM ()
 eRollbackToil logTrace txun = do
@@ -98,7 +98,7 @@ eRollbackToil logTrace txun = do
 -- if transaction is valid.
 eProcessTx
     :: HasTxpConfiguration
-    => TraceNamed m
+    => TraceNamed ExplorerExtraM
     -> ProtocolMagic
     -> BlockVersionData
     -> EpochIndex
@@ -118,7 +118,7 @@ eProcessTx logTrace pm bvd curEpoch tx@(id, aux) createExtra = do
 -- All valid transactions will be added to mem pool and applied to utxo.
 eNormalizeToil
     :: HasTxpConfiguration
-    => TraceNamed m
+    => TraceNamed ExplorerExtraM
     -> ProtocolMagic
     -> BlockVersionData
     -> EpochIndex
@@ -201,10 +201,10 @@ combineBalanceUpdates BalanceUpdate {..} =
     reducer _ = Nothing
 
 updateAddrBalances
-    :: TraceNamed m
+    :: TraceNamed ExplorerExtraM
     -> BalanceUpdate
     -> ExplorerExtraM ()
-updateAddrBalances _ (combineBalanceUpdates -> updates) = mapM_ updater updates
+updateAddrBalances logTrace (combineBalanceUpdates -> updates) = mapM_ updater updates
   where
     updater :: (Address, (Sign, Coin)) -> ExplorerExtraM ()
     updater (addr, (Plus, coin)) = do
@@ -215,7 +215,7 @@ updateAddrBalances _ (combineBalanceUpdates -> updates) = mapM_ updater updates
         maybeBalance <- getAddrBalance addr
         case maybeBalance of
             Nothing ->
-                logError noTrace $
+                logError (logTrace) $
                     sformat ("updateAddrBalances: attempted to subtract "%build%
                              " from unknown address "%build)
                     coin addr

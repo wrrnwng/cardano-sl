@@ -7,7 +7,7 @@
 
 module Pos.Explorer.Socket.Holder
        ( ExplorerSockets
-       , ExplorerSocket(..)
+       , ExplorerSocket (..)
        , _ProdSocket
        , _TestSocket
 
@@ -27,6 +27,8 @@ module Pos.Explorer.Socket.Holder
        , csClients
        , ccAddress
        , ccConnection
+
+       , HasConnectionsState
        ) where
 
 import           Universum

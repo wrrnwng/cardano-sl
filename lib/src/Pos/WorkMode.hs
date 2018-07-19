@@ -189,7 +189,7 @@ type instance MempoolExt (RealMode ext) = ext
 instance (HasConfiguration, HasTxpConfiguration) =>
          MonadTxpLocal (RealMode ()) where
     txpNormalize = txNormalize
-    txpProcessTx = txProcessTransaction noTrace noTrace
+    txpProcessTx = \tr -> txProcessTransaction tr noTrace
 
 instance MonadReporting (RealMode ext) where
     report rt = Mtl.ask >>= liftIO . flip runReporter rt . rmcReporter

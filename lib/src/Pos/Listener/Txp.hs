@@ -39,7 +39,7 @@ handleTxDo
 handleTxDo logTrace0 jsonLogTrace pm txAux = do
     let logTrace = appendName "handleTxDo" logTrace0
     let txId = hash (taTx txAux)
-    res <- txpProcessTx pm (txId, txAux)
+    res <- txpProcessTx logTrace pm (txId, txAux)
     let json me = traceWith jsonLogTrace $ JLTxR
             { jlrTxId     = sformat build txId
             , jlrError    = me
