@@ -37,9 +37,8 @@ import           Pos.Update.Context (UpdateContext)
 import           Pos.Util.Util (HasLens, HasLens')
 
 -- | These instances are implemented in @Pos.Binary.Communication@,
--- @Pos.Communication.Message@ and @Pos.Communication.Limits@, which
--- are unavailable at this point, hence we defer providing them
--- to the calling site.
+-- and @Pos.Communication.Limits@, which are unavailable at this
+-- point, hence we defer providing them to the calling site.
 type BlockInstancesConstraint =
     ( Each '[Bi]
         [ MsgGetHeaders

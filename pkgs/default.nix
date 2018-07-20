@@ -17217,6 +17217,7 @@ license = stdenv.lib.licenses.mit;
 , cardano-sl-crypto
 , cardano-sl-db
 , cardano-sl-lrc
+, cardano-sl-networking
 , cardano-sl-util
 , containers
 , cpphs
@@ -17265,6 +17266,7 @@ cardano-sl-core
 cardano-sl-crypto
 cardano-sl-db
 cardano-sl-lrc
+cardano-sl-networking
 cardano-sl-util
 containers
 cryptonite

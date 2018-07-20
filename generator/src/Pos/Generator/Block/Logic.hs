@@ -23,7 +23,6 @@ import           Pos.Block.Logic (applyBlocksUnsafe, createMainBlockInternal,
 import           Pos.Block.Lrc (lrcSingleShot)
 import           Pos.Block.Slog (ShouldCallBListener (..))
 import           Pos.Block.Types (Blund)
-import           Pos.Communication.Message ()
 import           Pos.Core (EpochOrSlot (..), SlotId (..), addressHash,
                      epochIndexL, getEpochOrSlot, getSlotIndex)
 import           Pos.Core.Block (Block)

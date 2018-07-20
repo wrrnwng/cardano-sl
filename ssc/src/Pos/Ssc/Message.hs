@@ -23,6 +23,7 @@ import           Control.Lens (makePrisms)
 import           Formatting (bprint, build, (%))
 import qualified Formatting.Buildable as Buildable
 
+import           Node.Message.Class (Message (..))
 import           Pos.Core (StakeholderId, VssCertificate, addressHash,
                      getCertId)
 import           Pos.Core.Ssc (InnerSharesMap, Opening, SignedCommitment)
@@ -76,3 +77,19 @@ instance HasSscTag MCShares where
 
 instance HasSscTag MCVssCertificate where
     toSscTag _ = VssCertificateMsg
+
+instance Message MCCommitment where
+    messageCode _ = 98
+    formatMessage _ = "MCCommitment"
+
+instance Message MCOpening where
+    messageCode _ = 97
+    formatMessage _ = "MCOpening"
+
+instance Message MCShares where
+    messageCode _ = 96
+    formatMessage _ = "MCShares"
+
+instance Message MCVssCertificate where
+    messageCode _ = 95
+    formatMessage _ = "MCVssCertificate"
