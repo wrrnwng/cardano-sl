@@ -34,6 +34,7 @@ import           Pos.Core.Configuration (HasProtocolConstants,
 import           Pos.Core.JsonLog (jsonLog)
 import           Pos.Core.Mockable.Production (Production (..))
 import           Pos.Crypto (ProtocolMagic, toPublic)
+import           Pos.DB.Txp (MonadTxpLocal)
 import           Pos.Diffusion.Full (FullDiffusionConfiguration (..),
                      diffusionLayerFull)
 import           Pos.Infra.Diffusion.Types (Diffusion (..), DiffusionLayer (..),
@@ -53,7 +54,6 @@ import           Pos.Logic.Types (Logic, hoistLogic)
 import           Pos.Recovery.Instance ()
 import           Pos.Reporting.Production (ProductionReporterParams (..),
                      productionReporter)
-import           Pos.Txp (MonadTxpLocal)
 import           Pos.Update.Configuration (HasUpdateConfiguration,
                      lastKnownBlockVersion)
 import           Pos.Util.CompileInfo (HasCompileInfo, compileInfo)

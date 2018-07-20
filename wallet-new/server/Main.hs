@@ -17,6 +17,7 @@ import           Pos.Core (epochSlots)
 import           Pos.Core.Mockable (Production (..), runProduction)
 import           Pos.Crypto (ProtocolMagic)
 import           Pos.DB.DB (initNodeDBs)
+import           Pos.DB.Txp (txpGlobalSettings)
 import           Pos.Infra.Diffusion.Types (Diffusion)
 import           Pos.Infra.Ntp.Configuration (NtpConfiguration,
                      ntpClientSettings)
@@ -26,7 +27,6 @@ import           Pos.Launcher (NodeParams (..), NodeResources (..),
 import           Pos.Launcher.Configuration (AssetLockPath (..),
                      ConfigurationOptions, HasConfigurations)
 import           Pos.Ssc.Types (SscParams)
-import           Pos.Txp (txpGlobalSettings)
 import           Pos.Util (logException)
 import           Pos.Util.CompileInfo (HasCompileInfo, withCompileInfo)
 import           Pos.Util.UserSecret (usVss)
