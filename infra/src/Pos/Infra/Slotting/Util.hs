@@ -33,8 +33,7 @@ import           Formatting (int, sformat, shown, stext, (%))
 import           System.Wlog (WithLogger, logDebug, logInfo, logNotice,
                      logWarning, modifyLoggerName)
 
-import           Pos.Core (HasProtocolConstants, LocalSlotIndex, SlotId (..),
-                     Timestamp (..), slotIdF)
+import           Pos.Core (LocalSlotIndex, SlotId (..), Timestamp (..), slotIdF)
 import           Pos.Core.Mockable (Async, Delay, Mockable, delay, timeout)
 import           Pos.Core.Slotting (ActionTerminationPolicy (..),
                      EpochSlottingData (..), MonadSlotsData,
@@ -42,7 +41,8 @@ import           Pos.Core.Slotting (ActionTerminationPolicy (..),
                      defaultOnNewSlotParams, getCurrentNextEpochSlottingDataM,
                      getCurrentSlotFlat, getEpochSlottingDataM,
                      getSystemStartM, lookupEpochSlottingData)
-import           Pos.Infra.Recovery.Info (MonadRecoveryInfo, recoveryInProgress)
+import           Pos.Infra.Recovery.Info (MonadRecoveryInfoConstraints,
+                     recoveryInProgress)
 import           Pos.Infra.Reporting (MonadReporting, reportOrLogE)
 import           Pos.Infra.Shutdown (HasShutdownContext)
 import           Pos.Infra.Slotting.Class (MonadSlots (..))
@@ -107,25 +107,25 @@ type MonadOnNewSlot ctx m =
     , Mockable Delay m
     , MonadReporting m
     , HasShutdownContext ctx
-    , MonadRecoveryInfo m
+    , MonadRecoveryInfoConstraints ctx m
     )
 
 -- | Run given action as soon as new slot starts, passing SlotId to
 -- it.  This function uses Mockable and assumes consistency between
 -- MonadSlots and Mockable implementations.
 onNewSlot
-    :: (MonadOnNewSlot ctx m, HasProtocolConstants)
+    :: MonadOnNewSlot ctx m
     => OnNewSlotParams -> (SlotId -> m ()) -> m ()
 onNewSlot = onNewSlotImpl False
 
 onNewSlotWithLogging
-    :: (MonadOnNewSlot ctx m, HasProtocolConstants)
+    :: MonadOnNewSlot ctx m
     => OnNewSlotParams -> (SlotId -> m ()) -> m ()
 onNewSlotWithLogging = onNewSlotImpl True
 
 -- TODO [CSL-198]: think about exceptions more carefully.
 onNewSlotImpl
-    :: forall ctx m. (MonadOnNewSlot ctx m, HasProtocolConstants)
+    :: forall ctx m. MonadOnNewSlot ctx m
     => Bool -> OnNewSlotParams -> (SlotId -> m ()) -> m ()
 onNewSlotImpl withLogging params action =
     impl `catch` workerHandler
@@ -144,7 +144,7 @@ onNewSlotImpl withLogging params action =
         onNewSlotImpl withLogging params action
 
 onNewSlotDo
-    :: (MonadOnNewSlot ctx m, HasProtocolConstants)
+    :: MonadOnNewSlot ctx m
     => Bool -> Maybe SlotId -> OnNewSlotParams -> (SlotId -> m ()) -> m ()
 onNewSlotDo withLogging expectedSlotId onsp action = do
     curSlot <- waitUntilExpectedSlot
@@ -190,7 +190,7 @@ onNewSlotDo withLogging expectedSlotId onsp action = do
     logTTW timeToWait = modifyLoggerName (<> "slotting") $ logDebug $
                  sformat ("Waiting for "%shown%" before new slot") timeToWait
 
-logNewSlotWorker :: (MonadOnNewSlot ctx m, HasProtocolConstants) => m ()
+logNewSlotWorker :: MonadOnNewSlot ctx m => m ()
 logNewSlotWorker =
     onNewSlotWithLogging defaultOnNewSlotParams $ \slotId -> do
         modifyLoggerName (<> "slotting") $

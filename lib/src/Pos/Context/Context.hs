@@ -35,6 +35,7 @@ import           Pos.Core.Reporting (HasMisbehaviorMetrics (..),
                      MisbehaviorMetrics (..))
 import           Pos.Infra.DHT.Real.Param (KademliaParams)
 import           Pos.Infra.Network.Types (NetworkConfig (..))
+import           Pos.Infra.Recovery.Types (RecoveryHeader, RecoveryHeaderTag)
 import           Pos.Infra.Shutdown (HasShutdownContext (..),
                      ShutdownContext (..))
 import           Pos.Infra.Slotting (HasSlottingVar (..),
@@ -46,7 +47,6 @@ import           Pos.Launcher.Param (BaseParams (..), NodeParams (..))
 import           Pos.Lrc.Context (LrcContext)
 import           Pos.Network.Block.RetrievalQueue (BlockRetrievalQueue,
                      BlockRetrievalQueueTag)
-import           Pos.Recovery.Types (RecoveryHeader, RecoveryHeaderTag)
 import           Pos.Ssc.Types (HasSscContext (..), SscContext)
 import           Pos.Txp.Settings (TxpGlobalSettings)
 import           Pos.Update.Context (UpdateContext)

@@ -39,7 +39,6 @@ import           Pos.Core.Mockable (Async, Delay, Mockable, Mockables,
                      SharedAtomic)
 import           Pos.Core.Slotting (MonadSlots)
 import           Pos.Infra.Communication.Types.Protocol
-import           Pos.Infra.Recovery.Info (MonadRecoveryInfo)
 import           Pos.Infra.Reporting (MonadReporting)
 import           Pos.Infra.Shutdown (HasShutdownContext)
 
@@ -173,7 +172,6 @@ type LocalOnNewSlotComm ctx m =
     , Mockables m [Async, Delay]
     , MonadReporting m
     , HasShutdownContext ctx
-    , MonadRecoveryInfo m
     )
 
 type OnNewSlotComm ctx m =

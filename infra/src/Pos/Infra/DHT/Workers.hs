@@ -13,14 +13,14 @@ import           Network.Kademlia (takeSnapshot)
 import           System.Wlog (WithLogger, logNotice)
 
 import           Pos.Binary.Class (serialize)
-import           Pos.Core (HasProtocolConstants)
 import           Pos.Core.Mockable (Async, Delay, Mockable)
 import           Pos.Core.Slotting (MonadSlots, flattenSlotId, slotIdF)
 import           Pos.Infra.Binary.DHTModel ()
 import           Pos.Infra.DHT.Constants (kademliaDumpInterval)
 import           Pos.Infra.DHT.Real.Types (KademliaDHTInstance (..))
 import           Pos.Infra.Diffusion.Types (Diffusion)
-import           Pos.Infra.Recovery.Info (MonadRecoveryInfo, recoveryCommGuard)
+import           Pos.Infra.Recovery.Info (MonadRecoveryInfoConstraints,
+                     recoveryCommGuard)
 import           Pos.Infra.Reporting (MonadReporting)
 import           Pos.Infra.Shutdown (HasShutdownContext)
 import           Pos.Infra.Slotting.Util (defaultOnNewSlotParams, onNewSlot)
@@ -32,24 +32,20 @@ type DhtWorkMode ctx m =
     , MonadMask m
     , Mockable Async m
     , Mockable Delay m
-    , MonadRecoveryInfo m
+    , MonadRecoveryInfoConstraints ctx m
     , MonadReader ctx m
     , MonadReporting m
     , HasShutdownContext ctx
     )
 
 dhtWorkers
-    :: ( DhtWorkMode ctx m
-       , HasProtocolConstants
-       )
+    :: DhtWorkMode ctx m
     => KademliaDHTInstance -> [Diffusion m -> m ()]
 dhtWorkers kademliaInst@KademliaDHTInstance {..} =
     [ dumpKademliaStateWorker kademliaInst ]
 
 dumpKademliaStateWorker
-    :: ( DhtWorkMode ctx m
-       , HasProtocolConstants
-       )
+    :: DhtWorkMode ctx m
     => KademliaDHTInstance
     -> Diffusion m
     -> m ()

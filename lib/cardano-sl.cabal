@@ -135,8 +135,6 @@ library
                         -- Network
                         Pos.Communication.Server
 
-                        Pos.Recovery.Instance
-
   build-depends:        base
                       , QuickCheck
                       , async

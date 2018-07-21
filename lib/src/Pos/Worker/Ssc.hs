@@ -40,7 +40,8 @@ import           Pos.Crypto.SecretSharing (toVssPublicKey)
 import           Pos.DB (gsAdoptedBVData)
 import           Pos.DB.Class (MonadDB, MonadGState)
 import           Pos.Infra.Diffusion.Types (Diffusion (..))
-import           Pos.Infra.Recovery.Info (MonadRecoveryInfo, recoveryCommGuard)
+import           Pos.Infra.Recovery.Info (MonadRecoveryInfoConstraints,
+                     recoveryCommGuard)
 import           Pos.Infra.Shutdown (HasShutdownContext)
 import           Pos.Infra.Slotting (MonadSlots, defaultOnNewSlotParams,
                      getCurrentSlot, getSlotStartEmpatically, onNewSlot)
@@ -84,7 +85,7 @@ type SscMode ctx m
       , MonadGState m
       , MonadDB m
       , MonadSscMem ctx m
-      , MonadRecoveryInfo m
+      , MonadRecoveryInfoConstraints ctx m
       , HasShutdownContext ctx
       , MonadReader ctx m
       , HasSscContext ctx

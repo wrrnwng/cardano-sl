@@ -69,6 +69,7 @@ import           Pos.Delegation (DelegationVar, HasDlgConfiguration)
 import           Pos.Generator.Block (BlockGenMode)
 import qualified Pos.GState as GS
 import           Pos.Infra.Network.Types (HasNodeType (..), NodeType (..))
+import           Pos.Infra.Recovery.Types (RecoveryHeader, RecoveryHeaderTag)
 import           Pos.Infra.Reporting (MonadReporting (..))
 import           Pos.Infra.Shutdown (HasShutdownContext (..),
                      ShutdownContext (..))
@@ -81,7 +82,6 @@ import           Pos.Infra.Util.JsonLog.Events (HasJsonLogConfig (..),
                      JsonLogConfig (..), MemPoolModifyReason, jsonLogDefault)
 import           Pos.Launcher (HasConfigurations)
 import           Pos.Lrc (LrcContext)
-import           Pos.Recovery.Types (RecoveryHeader, RecoveryHeaderTag)
 import           Pos.Ssc.Mem (SscMemTag)
 import           Pos.Ssc.Types (SscState)
 import           Pos.Txp (GenericTxpLocalData, MempoolExt, MonadTxpLocal (..),

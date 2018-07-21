@@ -20,7 +20,7 @@ import           Pos.Core (ProtocolMagic)
 import           Pos.Core.Mockable (MonadMockable)
 import           Pos.Core.Update (UpdateProposal (..), UpdateVote (..))
 import           Pos.DB.Class (MonadDB, MonadGState)
-import           Pos.Infra.Recovery.Info (MonadRecoveryInfo)
+import           Pos.Infra.Recovery.Info (MonadRecoveryInfoConstraints)
 import           Pos.Infra.Reporting (MonadReporting)
 import           Pos.Infra.Shutdown.Class (HasShutdownContext)
 import           Pos.Infra.Slotting (MonadSlots)
@@ -51,7 +51,7 @@ type UpdateMode ctx m
       , HasShutdownContext ctx
       , HasUpdateConfiguration
       , MonadReporting m
-      , MonadRecoveryInfo m
+      , MonadRecoveryInfoConstraints ctx m
       , MonadSlots ctx m
       )
 

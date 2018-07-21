@@ -32,6 +32,7 @@ import           Pos.DB.Class (MonadBlockDBRead, MonadDBRead, MonadGState (..),
                      SerializedBlock)
 import qualified Pos.DB.Class as DB (MonadDBRead (dbGetSerBlock))
 import qualified Pos.GState.BlockExtra as DB (resolveForwardLink, streamBlocks)
+import           Pos.Infra.Recovery.Types (RecoveryHeader, RecoveryHeaderTag)
 import           Pos.Infra.Slotting (MonadSlots)
 import           Pos.Infra.Util.JsonLog.Events (JLEvent)
 import           Pos.Listener.Delegation (DlgListenerConstraint)
@@ -45,7 +46,6 @@ import qualified Pos.Network.Block.Logic as Block
 import           Pos.Network.Block.WorkMode (BlockWorkMode)
 import           Pos.Recovery (MonadRecoveryInfo)
 import qualified Pos.Recovery as Recovery
-import           Pos.Recovery.Types (RecoveryHeader, RecoveryHeaderTag)
 import           Pos.Security.Params (SecurityParams)
 import           Pos.Security.Util (shouldIgnorePkAddress)
 import           Pos.Ssc.Logic (sscIsDataUseful, sscProcessCertificate,
