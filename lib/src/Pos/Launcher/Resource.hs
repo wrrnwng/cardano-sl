@@ -44,6 +44,7 @@ import           Pos.Core (HasConfiguration, Timestamp, gdStartTime,
 import           Pos.Core.Mockable (Production (..))
 import           Pos.Core.Reporting (initializeMisbehaviorMetrics)
 import           Pos.DB (MonadDBRead, NodeDBs)
+import           Pos.DB.Lrc (LrcContext (..), mkLrcSyncData)
 import           Pos.DB.Rocks (closeNodeDBs, openNodeDBs)
 import           Pos.DB.Txp (GenericTxpLocalData (..), TxpGlobalSettings,
                      mkTxpLocalData, recordTxpMetrics)
@@ -61,7 +62,6 @@ import           Pos.Infra.Util.JsonLog.Events (JsonLogConfig (..),
                      jsonLogConfigFromHandle)
 import           Pos.Launcher.Param (BaseParams (..), LoggingParams (..),
                      NodeParams (..))
-import           Pos.Lrc.Context (LrcContext (..), mkLrcSyncData)
 import           Pos.Ssc (SscParams, SscState, createSscContext, mkSscState)
 
 import           Pos.Launcher.Mode (InitMode, InitModeContext (..), runInitMode)

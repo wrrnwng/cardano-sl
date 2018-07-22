@@ -2,7 +2,7 @@
 
 -- | Constraints for LRC; a restricted version of `WorkMode`.
 
-module Pos.Lrc.Mode
+module Pos.DB.Lrc.Mode
        ( LrcMode
        ) where
 
@@ -13,7 +13,7 @@ import           UnliftIO (MonadUnliftIO)
 
 import           Pos.Core.Mockable (Async, Concurrently, Delay, Mockables)
 import           Pos.DB.Class (MonadDB, MonadGState)
-import           Pos.Lrc.Context (HasLrcContext)
+import           Pos.DB.Lrc.Context (HasLrcContext)
 
 -- | Set of constraints used by LRC.
 type LrcMode ctx m
