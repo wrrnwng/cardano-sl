@@ -38,14 +38,18 @@ data PollVerFailure
     | PollAlreadyAdoptedDiffers !BlockVersionData !BlockVersionModifier !UpId
     -- | Proposed script version must be the same as adopted one or
     -- greater by one, but this rule is violated.
-    | PollWrongScriptVersion { pwsvAdopted  :: !ScriptVersion
-                             , pwsvProposed :: !ScriptVersion
-                             , pwsvUpId     :: !UpId}
+    -- PollWrongScriptVersion
+    --    pwsvAdopted
+    --    pwsvProposed
+    --    pwsvUpId
+    | PollWrongScriptVersion !ScriptVersion !ScriptVersion !UpId
     -- | A proposal tried to increase the block size limit more than it was
     -- allowed to
-    | PollLargeMaxBlockSize { plmbsMaxPossible :: !Byte
-                            , plmbsFound       :: !Byte
-                            , plmbsUpId        :: !UpId}
+    -- PollLargeMaxBlockSize
+    --    plmbsMaxPossible
+    --    plmbsFound
+    --    plmbsUpId
+    | PollLargeMaxBlockSize !Byte !Byte !UpId
     -- | A proposal attempted to change the end of the bootstrap era
     -- post factum
     | PollBootstrapEraInvalidChange { pbeicLast     :: !EpochIndex
@@ -112,7 +116,10 @@ instance Buildable PollVerFailure where
                 " BlockVersionModifier doesn't correspond to the adopted"%
                 " BlockVersionData (adopted "%build%", proposed "%build%")")
         paadUpId paadAdopted paadProposed
-    build (PollWrongScriptVersion {..}) =
+    build (PollWrongScriptVersion
+               pwsvAdopted
+               pwsvProposed
+               pwsvUpId) =
         bprint ("proposal "%shortHashF%" contains script version"%
                 " which is neither same not greater by one than the"%
                 " adopted one (adopted one is "%int%

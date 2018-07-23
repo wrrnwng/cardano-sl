@@ -260,19 +260,13 @@ verifyNextBVMod upId epoch
     | Just newSV <- newSVM,
       newSV /= oldSV + 1 && newSV /= oldSV =
         throwError
-            PollWrongScriptVersion
-            { pwsvAdopted = oldSV
-            , pwsvProposed = newSV
-            , pwsvUpId = upId
-            }
+            $ PollWrongScriptVersion oldSV newSV upId
+
     | Just newMBS <- newMBSM,
       newMBS > oldMBS * 2 =
         throwError
-            PollLargeMaxBlockSize
-            { plmbsMaxPossible = oldMBS * 2
-            , plmbsFound = newMBS
-            , plmbsUpId = upId
-            }
+           $ PollLargeMaxBlockSize (oldMBS * 2) newMBS upId
+
     | Just newUnlockStakeEpoch <- newUnlockStakeEpochM,
       oldUnlockStakeEpoch /= newUnlockStakeEpoch = do
           let bootstrap = isBootstrapEra oldUnlockStakeEpoch epoch
