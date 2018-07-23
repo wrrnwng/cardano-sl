@@ -49,19 +49,15 @@ verifyAndApplyProposalBVS upId epoch up =
         -- This block version is adopted, so we check
         -- 'BlockVersionModifier' against the adopted 'BlockVersionData'.
         Just (Left adoptedBVD) -> unless (bvmMatchesBVD proposedBVM adoptedBVD) $
-           throwError PollAlreadyAdoptedDiffers
-                      { paadProposed = proposedBVM
-                      , paadAdopted = adoptedBVD
-                      , paadUpId = upId
-                      }
+           throwError
+               $ PollAlreadyAdoptedDiffers adoptedBVD proposedBVM upId
+
         -- This block version is competing, so we check that
         -- 'BlockVersionModifier' is the same.
         Just (Right competingBVM) -> unless (competingBVM == proposedBVM) $
-            throwError PollInconsistentBVM
-                       { pibExpected = competingBVM
-                       , pibFound = proposedBVM
-                       , pibUpId = upId
-                       }
+            throwError
+                $ PollInconsistentBVM competingBVM proposedBVM upId
+
         -- This block version isn't known, so we can add it after doing
         -- checks against the previous known block version state
         Nothing -> do

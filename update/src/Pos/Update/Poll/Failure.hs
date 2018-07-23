@@ -22,16 +22,20 @@ import           Pos.Crypto (shortHashF)
 -- appear in Poll data verification.
 data PollVerFailure
     =
-      -- | 'BlockVersionModifier' for this 'BlockVersion' is already known and
-      -- the one we saw doesn't match it.
-      PollInconsistentBVM { pibExpected :: !BlockVersionModifier
-                          , pibFound    :: !BlockVersionModifier
-                          , pibUpId     :: !UpId}
+    -- | 'BlockVersionModifier' for this 'BlockVersion' is already known and
+    -- the one we saw doesn't match it.
+    -- PollInconsistentBVM
+    --    pibExpected
+    --    pibFound
+    --    pibUpId
+      PollInconsistentBVM !BlockVersionModifier !BlockVersionModifier !UpId
     -- | 'BlockVersion' is already adopted and 'BlockVersionData' associated
     -- with it differs from the one we saw.
-    | PollAlreadyAdoptedDiffers { paadAdopted  :: !BlockVersionData
-                                , paadProposed :: !BlockVersionModifier
-                                , paadUpId     :: !UpId}
+    -- PollAlreadyAdoptedDiffers
+    --     paadAdopted
+    --     paadProposed
+    --     paadUpId
+    | PollAlreadyAdoptedDiffers !BlockVersionData !BlockVersionModifier !UpId
     -- | Proposed script version must be the same as adopted one or
     -- greater by one, but this rule is violated.
     | PollWrongScriptVersion { pwsvAdopted  :: !ScriptVersion
@@ -90,13 +94,19 @@ data PollVerFailure
     | PollInternalError !Text
 
 instance Buildable PollVerFailure where
-    build (PollInconsistentBVM {..}) =
+    build (PollInconsistentBVM
+               pibExpected
+               pibFound
+               pibUpId) =
         bprint ("proposal "%shortHashF%" contains block version"%
                 " which is already competing and its"%
                 " BlockVersionModifier is different"%
                 " (expected "%build%", proposed "%build%")")
         pibUpId pibExpected pibFound
-    build (PollAlreadyAdoptedDiffers {..}) =
+    build (PollAlreadyAdoptedDiffers
+               paadAdopted
+               paadProposed
+               paadUpId) =
         bprint ("proposal "%shortHashF%" contains block version"%
                 " which is already adopted and its"%
                 " BlockVersionModifier doesn't correspond to the adopted"%
