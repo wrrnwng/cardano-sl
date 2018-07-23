@@ -15,7 +15,7 @@ import           Pos.Core.Chrono (NewestFirst (..))
 import           Pos.Core.Mockable (Production, runProduction)
 import           Pos.DB (closeNodeDBs, openNodeDBs)
 import           Pos.DB.Block (getUndo)
-import qualified Pos.DB.Block.Load as DB
+import qualified Pos.DB.Block as DB
 import           Pos.DB.Class (getBlock)
 import qualified Pos.DB.GState.Common as GS
 import           Pos.Launcher (withConfigurations)

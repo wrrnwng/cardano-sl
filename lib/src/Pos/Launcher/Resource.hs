@@ -34,7 +34,6 @@ import           System.Wlog (LoggerConfig (..), WithLogger, consoleActionB,
 import           Network.Broadcast.OutboundQueue.Types (NodeType (..))
 import           Pos.Binary ()
 import           Pos.Block.Configuration (HasBlockConfiguration)
-import           Pos.Block.Slog (mkSlogContext)
 import           Pos.Client.CLI.Util (readLoggerConfig)
 import           Pos.Configuration
 import           Pos.Context (ConnectedPeers (..), NodeContext (..),
@@ -44,6 +43,7 @@ import           Pos.Core (HasConfiguration, Timestamp, gdStartTime,
 import           Pos.Core.Mockable (Production (..))
 import           Pos.Core.Reporting (initializeMisbehaviorMetrics)
 import           Pos.DB (MonadDBRead, NodeDBs)
+import           Pos.DB.Block (mkSlogContext)
 import           Pos.DB.Delegation (mkDelegationVar)
 import           Pos.DB.Lrc (LrcContext (..), mkLrcSyncData)
 import           Pos.DB.Rocks (closeNodeDBs, openNodeDBs)

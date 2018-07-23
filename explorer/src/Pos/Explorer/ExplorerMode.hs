@@ -23,10 +23,10 @@ import           Test.QuickCheck (Gen, Property, Testable (..), arbitrary,
                      forAll, ioProperty)
 import           Test.QuickCheck.Monadic (PropertyM, monadic)
 
-import           Pos.Block.Slog (mkSlogGState)
 import           Pos.Core (SlotId, Timestamp (..), epochSlots)
 import           Pos.DB (MonadGState (..))
 import qualified Pos.DB as DB
+import           Pos.DB.Block (mkSlogGState)
 import qualified Pos.DB.Block as DB
 import           Pos.DB.Class (MonadDBRead)
 import           Pos.DB.DB as DB
