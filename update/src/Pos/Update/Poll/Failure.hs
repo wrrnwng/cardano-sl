@@ -70,13 +70,17 @@ data PollVerFailure
     --     pnrThreshold
     --     pnrStake
     | PollNotRichman !StakeholderId !Coin !(Maybe Coin)
-    | PollUnknownProposal { pupStakeholder :: !StakeholderId
-                         ,  pupProposal    :: !UpId}
+    -- PollUnknownProposal
+    --     pupStakeholder
+    --     pupProposal
+    | PollUnknownProposal !StakeholderId !UpId
     | PollUnknownStakes !EpochIndex
-    | PollWrongSoftwareVersion { pwsvStored :: !(Maybe NumSoftwareVersion)
-                              ,  pwsvApp    :: !ApplicationName
-                              ,  pwsvGiven  :: !NumSoftwareVersion
-                              ,  pwsvUpId   :: !UpId}
+    -- PollWrongSoftwareVersion
+    --    pwsvStored
+    --    pwsvApp
+    --    pwsvGiven
+    --    pwsvUpId
+    | PollWrongSoftwareVersion !(Maybe NumSoftwareVersion) !ApplicationName !NumSoftwareVersion !UpId
     | PollProposalIsDecided { ppidUpId        :: !UpId
                            ,  ppidStakeholder :: !StakeholderId}
     | PollExtraRevote { perUpId        :: !UpId
@@ -160,7 +164,11 @@ instance Buildable PollVerFailure where
         stakeholder proposal
     build (PollUnknownStakes epoch) =
         bprint ("stake distribution for epoch "%build%" is unknown") epoch
-    build (PollWrongSoftwareVersion {..}) =
+    build (PollWrongSoftwareVersion
+               pwsvStored
+               pwsvApp
+               pwsvGiven
+               pwsvUpId) =
         bprint ("proposal "%build%" has wrong software version for app "%
                 build%" (last known is "%stext%", proposal contains "%int%")")
         pwsvUpId pwsvApp (maybe "unknown" pretty pwsvStored) pwsvGiven

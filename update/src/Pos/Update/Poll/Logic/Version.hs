@@ -182,24 +182,14 @@ verifySoftwareVersion upId UnsafeUpdateProposal {..} =
         Nothing | svNumber sv == 0 -> pass
                 | otherwise ->
                   throwError
-                    PollWrongSoftwareVersion
-                    { pwsvStored = Nothing
-                    , pwsvGiven = svNumber sv
-                    , pwsvApp = app
-                    , pwsvUpId = upId
-                    }
+                      $ PollWrongSoftwareVersion Nothing app (svNumber sv) upId
         -- Otherwise we check that version is 1 more than stored
         -- version.
         Just n
             | svNumber sv == n + 1 -> pass
             | otherwise ->
                 throwError
-                    PollWrongSoftwareVersion
-                    { pwsvStored = Just n
-                    , pwsvGiven = svNumber sv
-                    , pwsvApp = app
-                    , pwsvUpId = upId
-                    }
+                    $ PollWrongSoftwareVersion (Just n) app (svNumber sv) upId
   where
     sv = upSoftwareVersion
     app = svAppName sv

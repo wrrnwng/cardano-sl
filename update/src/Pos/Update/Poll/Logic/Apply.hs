@@ -240,12 +240,11 @@ verifyAndApplyVotesGroup cd votes = mapM_ verifyAndApplyVote votes
     upId = uvProposalId $ NE.head votes
     verifyAndApplyVote vote = do
         let !stakeholderId = addressHash . uvKey $ NE.head votes
-            unknownProposalErr =
-                PollUnknownProposal
-                {pupStakeholder = stakeholderId, pupProposal = upId}
+            unknownProposalErr = PollUnknownProposal stakeholderId upId
         ps <- note unknownProposalErr =<< getProposal upId
         case ps of
-            PSDecided _     -> throwError $ PollProposalIsDecided upId stakeholderId
+            PSDecided _     -> throwError
+                                   $ PollProposalIsDecided upId stakeholderId
             PSUndecided ups -> verifyAndApplyVoteDo cd ups vote
 
 -- Here we actually apply vote to stored undecided proposal.
