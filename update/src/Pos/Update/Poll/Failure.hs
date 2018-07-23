@@ -60,32 +60,36 @@ data PollVerFailure
     | PollBootstrapEraInvalidChange !EpochIndex !EpochIndex !EpochIndex !UpId
     | PollNotFoundScriptVersion !BlockVersion
     | PollProposalAlreadyActive !UpId
-    -- PollSmallProposalStake
-    --     pspsThreshold
-    --     pspsActual
-    --     pspsUpId
+    -- | PollSmallProposalStake
+    --       pspsThreshold
+    --       pspsActual
+    --       pspsUpId
     | PollSmallProposalStake !Coin !Coin !UpId
-    -- PollNotRichman
-    --     pnrStakeholder
-    --     pnrThreshold
-    --     pnrStake
+    -- | PollNotRichman
+    --       pnrStakeholder
+    --       pnrThreshold
+    --       pnrStake
     | PollNotRichman !StakeholderId !Coin !(Maybe Coin)
-    -- PollUnknownProposal
-    --     pupStakeholder
-    --     pupProposal
+    -- | PollUnknownProposal
+    --       pupStakeholder
+    --       pupProposal
     | PollUnknownProposal !StakeholderId !UpId
     | PollUnknownStakes !EpochIndex
-    -- PollWrongSoftwareVersion
-    --    pwsvStored
-    --    pwsvApp
-    --    pwsvGiven
-    --    pwsvUpId
+    -- | PollWrongSoftwareVersion
+    --       pwsvStored
+    --       pwsvApp
+    --       pwsvGiven
+    --       pwsvUpId
     | PollWrongSoftwareVersion !(Maybe NumSoftwareVersion) !ApplicationName !NumSoftwareVersion !UpId
-    | PollProposalIsDecided { ppidUpId        :: !UpId
-                           ,  ppidStakeholder :: !StakeholderId}
-    | PollExtraRevote { perUpId        :: !UpId
-                     ,  perStakeholder :: !StakeholderId
-                     ,  perDecision    :: !Bool}
+    -- | PollProposalIsDecided
+    --      ppidUpId
+    --      ppidStakeholder
+    | PollProposalIsDecided !UpId !StakeholderId
+    -- | PollExtraRevote
+    --       perUpId
+    --       perStakeholder
+    --       perDecision
+    | PollExtraRevote !UpId !StakeholderId !Bool
     | PollWrongHeaderBlockVersion { pwhpvGiven   :: !BlockVersion
                                   , pwhpvAdopted :: !BlockVersion}
     | PollBadBlockVersion { pbpvUpId       :: !UpId
@@ -172,11 +176,16 @@ instance Buildable PollVerFailure where
         bprint ("proposal "%build%" has wrong software version for app "%
                 build%" (last known is "%stext%", proposal contains "%int%")")
         pwsvUpId pwsvApp (maybe "unknown" pretty pwsvStored) pwsvGiven
-    build (PollProposalIsDecided {..}) =
+    build (PollProposalIsDecided
+               ppidUpId
+               ppidStakeholder) =
         bprint ("proposal "%build%" is in decided state, but stakeholder "%
                 build%" has voted for it")
         ppidUpId ppidStakeholder
-    build (PollExtraRevote {..}) =
+    build (PollExtraRevote
+               perUpId
+               perStakeholder
+               perDecision) =
         bprint ("stakeholder "%build%" vote "%stext%" proposal "
                 %build%" more than once")
         perStakeholder (bool "against" "for" perDecision) perUpId

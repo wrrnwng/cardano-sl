@@ -386,11 +386,7 @@ voteToUProposalState voter stake decision ups@UndecidedProposalState {..} = do
         upId voter combinedMaybe stake
     combined <-
         note
-            (PollExtraRevote
-             { perStakeholder = addressHash voter
-             , perUpId = upId
-             , perDecision = decision
-             })
+            (PollExtraRevote upId (addressHash voter) decision)
             combinedMaybe
     -- We recalculate new stake taking into account that old vote
     -- could be deactivate.
