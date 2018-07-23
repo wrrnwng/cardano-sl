@@ -130,10 +130,7 @@ resolveVoteStake epoch totalStake vote = do
     let !id = addressHash (uvKey vote)
     thresholdPortion <- bvdUpdateProposalThd <$> getAdoptedBVData
     let threshold = applyCoinPortionUp thresholdPortion totalStake
-    let errNotRichman mbStake = PollNotRichman
-            { pnrStakeholder = id
-            , pnrThreshold   = threshold
-            , pnrStake       = mbStake }
+    let errNotRichman mbStake = PollNotRichman id threshold mbStake
     stake <- note (errNotRichman Nothing) =<< getRichmanStake epoch id
     when (stake < threshold) $
         throwError $ errNotRichman (Just stake)
@@ -224,11 +221,10 @@ verifyProposalStake totalStake votesAndStakes upId = do
             upId thresholdInt votesSum
     when (votesSum < thresholdInt) $
         throwError
-            PollSmallProposalStake
-            { pspsThreshold = threshold
-            , pspsActual = unsafeIntegerToCoin votesSum
-            , pspsUpId = upId
-            }
+            $ PollSmallProposalStake
+                  threshold
+                  (unsafeIntegerToCoin votesSum)
+                  upId
 
 -- Here we verify votes for proposal which is already active. Each
 -- vote must have enough stake as per distribution from epoch where

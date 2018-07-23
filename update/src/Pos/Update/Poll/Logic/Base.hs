@@ -271,12 +271,12 @@ verifyNextBVMod upId epoch
       oldUnlockStakeEpoch /= newUnlockStakeEpoch = do
           let bootstrap = isBootstrapEra oldUnlockStakeEpoch epoch
           unless bootstrap $ throwError
-              PollBootstrapEraInvalidChange
-              { pbeicLast = epoch
-              , pbeicAdopted = oldUnlockStakeEpoch
-              , pbeicProposed = newUnlockStakeEpoch
-              , pbeicUpId = upId
-              }
+              $ PollBootstrapEraInvalidChange
+                    epoch
+                    oldUnlockStakeEpoch
+                    newUnlockStakeEpoch
+                    upId
+
     | otherwise = pass
 
 -- | Dummy type for tagging used by 'calcSoftforkThreshold'.

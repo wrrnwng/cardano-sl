@@ -52,18 +52,24 @@ data PollVerFailure
     | PollLargeMaxBlockSize !Byte !Byte !UpId
     -- | A proposal attempted to change the end of the bootstrap era
     -- post factum
-    | PollBootstrapEraInvalidChange { pbeicLast     :: !EpochIndex
-                                    , pbeicAdopted  :: !EpochIndex
-                                    , pbeicProposed :: !EpochIndex
-                                    , pbeicUpId     :: !UpId }
+    -- PollBootstrapEraInvalidChange
+    --     pbeicLast
+    --     pbeicAdopted
+    --     pbeicProposed
+    --     pbeicUpId
+    | PollBootstrapEraInvalidChange !EpochIndex !EpochIndex !EpochIndex !UpId
     | PollNotFoundScriptVersion !BlockVersion
     | PollProposalAlreadyActive !UpId
-    | PollSmallProposalStake { pspsThreshold :: !Coin
-                            ,  pspsActual    :: !Coin
-                            ,  pspsUpId      :: !UpId}
-    | PollNotRichman { pnrStakeholder :: !StakeholderId
-                    ,  pnrThreshold   :: !Coin
-                    ,  pnrStake       :: !(Maybe Coin)}
+    -- PollSmallProposalStake
+    --     pspsThreshold
+    --     pspsActual
+    --     pspsUpId
+    | PollSmallProposalStake !Coin !Coin !UpId
+    -- PollNotRichman
+    --     pnrStakeholder
+    --     pnrThreshold
+    --     pnrStake
+    | PollNotRichman !StakeholderId !Coin !(Maybe Coin)
     | PollUnknownProposal { pupStakeholder :: !StakeholderId
                          ,  pupProposal    :: !UpId}
     | PollUnknownStakes !EpochIndex
